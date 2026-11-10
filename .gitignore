@@ -3,6 +3,11 @@
 .env.*
 !.env.example
 
+# Power Pages environment manifest: per-developer, per-environment state.
+# Microsoft documents this as ignore-worthy. NOTE: manifest.yml (delete
+# tracking) must stay committed - it propagates deletions to the target.
+*-manifest.yml
+
 # OS / editor
 .DS_Store
 Thumbs.db

@@ -1,0 +1,42 @@
+name: Deploy to Power Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Uploads are stateful (see manifest.yml) - never run two at once.
+concurrency:
+  group: powerpages-upload
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check that site content exists
+        run: |
+          if [ ! -d site ]; then
+            echo "::error::No site/ folder. Run 'pac pages download --path site --webSiteId <id>' first - see AGENTS.md"
+            exit 1
+          fi
+
+      # Must be the first Power Platform action in the workflow.
+      - name: Install Power Platform Tools
+        uses: microsoft/powerplatform-actions/actions-install@v1
+
+      - name: Upload site content
+        uses: microsoft/powerplatform-actions/upload-paportal@v1
+        with:
+          environment-url: ${{ vars.PP_ENVIRONMENT_URL }}
+          app-id: ${{ vars.PP_APP_ID }}
+          client-secret: ${{ secrets.PP_CLIENT_SECRET }}
+          tenant-id: ${{ vars.PP_TENANT_ID }}
+          upload-path: site
+          # 1 = standard data model, 2 = enhanced. Check with: pac pages list -v
+          model-version: ${{ vars.PP_MODEL_VERSION || '1' }}
+          # Add deployment-profile once deployment-profiles/<name>.deployment.yml exists:
+          # deployment-profile: prod
